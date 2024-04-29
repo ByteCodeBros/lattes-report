@@ -1,7 +1,7 @@
 # LATTES REPORT
 # Projeto de Análise de Dados Lattes
 
-Este é um projeto desenvolvido em Java para análise de dados provenientes da Plataforma Lattes. Ele recebe como entrada arquivos .xml que representam perfis de currículos Lattes e permite a geração de relatórios com base nessas informações.
+Este é um projeto desenvolvido em Java para análise de dados provenientes da Plataforma Lattes. Ele recebe como entrada um arquivo .xml que representa um perfil de currículo Lattes e permite a geração de relatórios com base nessas informações.
 
 ## Como funciona
 
