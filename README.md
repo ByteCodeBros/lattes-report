@@ -1,4 +1,5 @@
 # LATTES REPORT
+
 # Projeto de Análise de Dados Lattes
 
 Um projeto desenvolvido em Java para análise de dados provenientes da Plataforma Lattes. Ele recebe como entrada um arquivo .xml que representa um perfil de currículo Lattes e permite a geração de relatórios com base nessas informações.
@@ -48,6 +49,7 @@ Contribuições são bem-vindas! Sinta-se à vontade para enviar pull requests c
 
 - [Daniel dos Santos](https://github.com/dsantosr)
 - [Welderson Bruce](https://github.com/brvcelose)
+- [Igor Avila Pereira](https://github.com/IgorAvilaPereira)   
 
 ## Licença
 

@@ -18,22 +18,23 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Objects;
 import java.util.Scanner;
+import java.util.Set;
 
 public class Gerenciador {
     private Pesquisador pesquisadorLogado;
     private final ArrayList<Pesquisador> pesquisadores;
 
-    public Gerenciador(){
+    public Gerenciador() {
         this.pesquisadores = new ArrayList<>();
     }
 
-    public void preCadastro(){
-
+    public void preCadastro() {
         File folder = new File("files/.");
         File[] listOfFiles = folder.listFiles();
-
         for (int i = 0; i < Objects.requireNonNull(listOfFiles).length; i++) {
             String nomeDoArquivo = listOfFiles[i].getName();
             boolean isXml = nomeDoArquivo.endsWith(".xml");
@@ -41,9 +42,10 @@ public class Gerenciador {
                 carregaDadosDoCurriculo(listOfFiles[i]);
             }
         }
+
     }
 
-    private void carregaDadosDoCurriculo(File arquivo){
+    private void carregaDadosDoCurriculo(File arquivo) {
         carregaNomeDoPesquisador(arquivo);
         carregaTrabalhosEmEventos(arquivo);
         carregaArtigosPublicados(arquivo);
@@ -52,7 +54,7 @@ public class Gerenciador {
         this.pesquisadorLogado = null;
     }
 
-    public void escolherPesquisador(){
+    public void escolherPesquisador() {
         if (pesquisadores.isEmpty()) {
             System.out.println("Não há pesquisador cadastrados\n");
         } else {
@@ -71,8 +73,8 @@ public class Gerenciador {
 
             boolean respostaValida = false;
 
-            while(!respostaValida){
-                if(resposta <= pesquisadores.size() && resposta >= 1){
+            while (!respostaValida) {
+                if (resposta <= pesquisadores.size() && resposta >= 1) {
                     respostaValida = true;
                 } else {
                     System.out.println("Informe um valor válido!\n");
@@ -83,19 +85,21 @@ public class Gerenciador {
             pesquisadorLogado = pesquisadores.get(resposta - 1);
 
             System.out.println("\nLogin do pesquisador '" + pesquisadorLogado.getNome() + "' realizado com sucesso!");
+            // // entrada.close();
         }
     }
 
-    public void gerarRelatorio(){
+    public void gerarRelatorio() {
         if (pesquisadores.isEmpty() || pesquisadorLogado == null) {
             System.out.println("Não há pesquisador logado\n");
         } else {
             System.out.println(
                     """
-                    Escolha uma das opções a seguir:
-                    1-Gerar Relatório por ano;
-                    2-Gerar Relatório quantitativo por ano e tipo;
-                    """);
+                            Escolha uma das opções a seguir:
+                            1-Gerar Relatório por ano;
+                            2-Gerar Relatório quantitativo por ano e tipo;
+                            3-Gerar mini currículo
+                            """);
 
             Scanner entrada = new Scanner(System.in);
             int escolhaDoUsuario = entrada.nextInt();
@@ -105,7 +109,8 @@ public class Gerenciador {
                     System.out.println(gerarRelatorioPorAno());
                     System.out.println("Desejas salvar o relatório? (1-Sim/2-Não)");
                     int salvar = entrada.nextInt();
-                    if(salvar == 1) salvarRelatorio(gerarRelatorioPorAno());
+                    if (salvar == 1)
+                        salvarRelatorio(gerarRelatorioPorAno());
                 }
 
                 case 2 -> {
@@ -115,40 +120,78 @@ public class Gerenciador {
                     System.out.println(gerarRelatorioQuantitativoPorTipoEAno(ano));
                     System.out.println("\nDesejas salvar o relatório? (1-Sim/2-Não)");
                     int salvar = entrada.nextInt();
-                    if(salvar == 1) {
+                    if (salvar == 1) {
                         String relatorio = gerarRelatorioQuantitativoPorTipoEAno(ano);
                         salvarRelatorio(relatorio);
                     }
                 }
+                case 3 -> {
+                //     System.out.print("\nInforme o ano: \n");
+                //     int ano = entrada.nextInt();
+
+                    // System.out.println(gerarRelatorioQuantitativoPorTipoEAno(ano));
+                    // System.out.println("\nDesejas salvar o relatório? (1-Sim/2-Não)");
+                    // int salvar = entrada.nextInt();
+                    // if (salvar == 1) {
+                        String relatorio = gerarMiniCurriculo();
+                        salvarRelatorio(relatorio);
+                    // }
+                }
                 default -> System.out.println("Insira um valor válido.");
             }
+            // entrada.close();
+
         }
     }
 
-    private String gerarRelatorioPorAno(){
+    // TODO gerarMinicurriculo
+
+    private String gerarMiniCurriculo() {
+        StringBuilder resultado = new StringBuilder();
+
+        resultado.append(pesquisadorLogado.getNome()  + "\n");
+        resultado.append(pesquisadorLogado.getPaisDeNascimento()+ "\n");
+        resultado.append(pesquisadorLogado.getResumoCV() + "\n");
+        resultado.append(pesquisadorLogado.getEnderecoProfissional().toString() + "\n");
+        resultado.append(pesquisadorLogado.getAtuacoesProfissionais().toString() + "\n");      
+
+        resultado.append("Produção Bibliográfica: \n\n");       
+        for (ProducaoBibliografica producaoBibliografica : this.pesquisadorLogado.getProducoesBibliograficas()) {
+            resultado.append("Titulo: ").append(producaoBibliografica.getTitulo()).append("\n" +
+                    "").append("Autores: ").append(producaoBibliografica.autoresToString()).append(" \n" +
+                            "")
+                    /* append(" Tipo: ")*/.append(producaoBibliografica.getTipo()).append(producaoBibliografica.getDetalhamento().toString().replace("[","").replace("]", ""));
+            resultado.append("\n\n");
+        }
+        return resultado.toString() + "\nOutras Informações Relevantes:\n"+ pesquisadorLogado.getOutrasInformacoesRelevantes();
+
+    }
+
+    private String gerarRelatorioPorAno() {
         StringBuilder resultado = new StringBuilder();
 
         ArrayList<Integer> anos = new ArrayList<>();
         anos.add(this.pesquisadorLogado.getProducoesBibliograficas().get(0).getAno());
 
-        for(ProducaoBibliografica producaoBibliografica : this.pesquisadorLogado.getProducoesBibliograficas()){
+        for (ProducaoBibliografica producaoBibliografica : this.pesquisadorLogado.getProducoesBibliograficas()) {
             boolean adicionar = true;
-            for(Integer ano : anos){
+            for (Integer ano : anos) {
                 if (ano.equals(producaoBibliografica.getAno())) {
                     adicionar = false;
                     break;
                 }
             }
-            if(adicionar) anos.add(producaoBibliografica.getAno());
+            if (adicionar)
+                anos.add(producaoBibliografica.getAno());
         }
 
-        for(Integer ano : anos){
+        for (Integer ano : anos) {
             resultado.append("\n").append(ano).append(": \n");
-            for(ProducaoBibliografica producaoBibliografica : this.pesquisadorLogado.getProducoesBibliograficas()){
+            for (ProducaoBibliografica producaoBibliografica : this.pesquisadorLogado.getProducoesBibliograficas()) {
                 resultado.append(" Titulo da Produção: ").append(producaoBibliografica.getTitulo()).append("; \n" +
                         "").append(" Autores: ").append(producaoBibliografica.autoresToString()).append(" \n" +
-                        "").append(" Tipo: ").append(producaoBibliografica.getTipo());
-
+                                "")
+                        .append(" Tipo: ").append(producaoBibliografica.getTipo());
 
                 resultado.append("\n\n");
             }
@@ -157,7 +200,7 @@ public class Gerenciador {
         return resultado.toString();
     }
 
-    private String gerarRelatorioQuantitativoPorTipoEAno(int ano){
+    private String gerarRelatorioQuantitativoPorTipoEAno(int ano) {
         ArrayList<ProducaoBibliografica> artigosPublicados = new ArrayList<>();
         ArrayList<ProducaoBibliografica> trabalhosEmEventos = new ArrayList<>();
         ArrayList<ProducaoBibliografica> capitulosPublicados = new ArrayList<>();
@@ -190,23 +233,21 @@ public class Gerenciador {
 
     }
 
-    private void salvarRelatorio(String relatorio){
-        try{
+    private void salvarRelatorio(String relatorio) {
+        try {
             Scanner entrada = new Scanner(System.in);
             System.out.println("Informe o nome do novo arquivo: \n");
             String nome = entrada.nextLine();
 
             com.itextpdf.text.Document document = new com.itextpdf.text.Document(PageSize.A4, 25, 20, 25, 20);
 
-
             File arquivoTemp = new File("relatorios salvos/" + nome + ".pdf");
             boolean arquivoExiste = arquivoTemp.exists();
 
-
-            if(arquivoExiste){
+            if (arquivoExiste) {
                 System.out.println("O arquivo '" + nome + "' já existe. Você deseja sobrescrevê-lo? (1-Sim/2-Não).");
                 int escolhaDoUsuario = entrada.nextInt();
-                switch (escolhaDoUsuario){
+                switch (escolhaDoUsuario) {
                     case 1 -> {
                         PdfWriter.getInstance(document, new FileOutputStream("relatorios salvos/" + nome + ".pdf"));
                         System.out.println("O arquivo '" + nome + "' foi salvo com sucesso.");
@@ -214,24 +255,25 @@ public class Gerenciador {
                     case 2 -> System.out.println("O relatório não foi salvo.");
                     default -> System.out.println("Insira um valor válido.");
                 }
-            }else {
+            } else {
                 PdfWriter.getInstance(document, new FileOutputStream("relatorios salvos/" + nome + ".pdf"));
                 System.out.println("O arquivo '" + nome + "' foi salvo com sucesso.");
             }
 
             document.open();
-            document.add(new Paragraph(new Phrase(10f,relatorio, FontFactory.getFont(FontFactory.TIMES_ROMAN,10))));
+            document.add(new Paragraph(new Phrase(10f, relatorio, FontFactory.getFont(FontFactory.TIMES_ROMAN, 10))));
             document.close();
+            // entrada.close();
 
-        }catch (FileNotFoundException eita){
+        } catch (FileNotFoundException eita) {
             System.out.println("Não foi possível abrir ou alterar o arquivo.");
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private void carregaNomeDoPesquisador(File arquivo){
-        try{
+    private void carregaNomeDoPesquisador(File arquivo) {
+        try {
             DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
             dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
 
@@ -241,23 +283,48 @@ public class Gerenciador {
             doc.getDocumentElement().normalize();
 
             String dados = "DADOS-GERAIS";
-
             NodeList dadosGerais = doc.getElementsByTagName(dados);
 
             String nomeDoPesquisador;
             nomeDoPesquisador = dadosGerais.item(0).getAttributes().getNamedItem("NOME-COMPLETO").getTextContent();
+            String paisDeNascimento = dadosGerais.item(0).getAttributes().getNamedItem("PAIS-DE-NASCIMENTO")
+                    .getTextContent();
+
+            dados = "RESUMO-CV";
+            NodeList dadosResumo = doc.getElementsByTagName(dados);
+            String resumoCV = dadosResumo.item(0).getAttributes().getNamedItem("TEXTO-RESUMO-CV-RH").getTextContent();
+
+            String outrasInformacoesRelevantes = null;
+            try {
+                dados = "OUTRAS-INFORMACOES-RELEVANTES";
+                NodeList dadosOutrasInformacoesRelevantes = doc.getElementsByTagName(dados);
+                outrasInformacoesRelevantes = dadosOutrasInformacoesRelevantes.item(0).getAttributes()
+                        .getNamedItem("OUTRAS-INFORMACOES-RELEVANTES").getTextContent();
+            } catch (Exception e) {
+                System.out.println("Sem outras Informações relevantes...");
+            }
 
             Pesquisador pesquisador = new Pesquisador(nomeDoPesquisador);
+            pesquisador.setPaisDeNascimento(paisDeNascimento);
+            pesquisador.setResumoCV(resumoCV);
+            pesquisador.setOutrasInformacoesRelevantes(outrasInformacoesRelevantes);
+            pesquisador.setEnderecoProfissional(
+                    new EnderecoProfissional(doc.getElementsByTagName("ENDERECO-PROFISSIONAL")));
+            pesquisador.setFormacaoAcademica(new FormacaoAcademica(doc));
+            pesquisador.setAtuacoesProfissionais(new AtuacoesProfissionais(doc));
             pesquisadores.add(pesquisador);
-
+            // System.out.println("==========");
+            // System.out.println(pesquisador);
+            // System.out.println("==========");
             this.pesquisadorLogado = pesquisador;
 
         } catch (ParserConfigurationException | SAXException | IOException e) {
             e.printStackTrace();
         }
+
     }
 
-    private void carregaTrabalhosEmEventos(File arquivo){
+    private void carregaTrabalhosEmEventos(File arquivo) {
         try {
             DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
             dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
@@ -281,29 +348,52 @@ public class Gerenciador {
                     String ano = "";
                     NodeList dadosBasicos = ((Element) node).getElementsByTagName("DADOS-BASICOS-DO-TRABALHO");
                     for (int i = 0; i < dadosBasicos.getLength(); i++) {
-                        titulo = dadosBasicos.item(i).getAttributes().getNamedItem("TITULO-DO-TRABALHO").getTextContent();
+                        titulo = dadosBasicos.item(i).getAttributes().getNamedItem("TITULO-DO-TRABALHO")
+                                .getTextContent();
                         ano = dadosBasicos.item(i).getAttributes().getNamedItem("ANO-DO-TRABALHO").getTextContent();
                     }
 
-                    NodeList autores = ((Element) node).getElementsByTagName("AUTORES");
-                    for (int i = 0; i < autores.getLength(); i++) {
-                        String autor = autores.item(i).getAttributes().getNamedItem("NOME-COMPLETO-DO-AUTOR").getTextContent();
-                        arrayListAutores.add(autor);
-                    }
+                    NodeList nodeDetalhamento = ((Element) node).getElementsByTagName("DETALHAMENTO-DO-TRABALHO");
+                    ArrayList<String> detalhamento = new ArrayList<>();
 
-                    ProducaoBibliografica producao = new TrabalhoEmEvento(arrayListAutores,titulo,ano);
+                        detalhamento.add(nodeDetalhamento.item(0).getAttributes().getNamedItem("NOME-DO-EVENTO")
+                                .getTextContent());
+
+                                detalhamento.add(nodeDetalhamento.item(0).getAttributes().getNamedItem("CIDADE-DO-EVENTO")
+                                .getTextContent());
+
+                                detalhamento.add(nodeDetalhamento.item(0).getAttributes().getNamedItem("ANO-DE-REALIZACAO")
+                                .getTextContent());
+                        
+                    
+
+                    
+
+                    NodeList autores = ((Element) node).getElementsByTagName("AUTORES");
+                    Set<String> vetAutores = new HashSet<>();
+                    for (int i = 0; i < autores.getLength(); i++) {                        
+                        // String autor = autores.item(i).getAttributes().getNamedItem("NOME-COMPLETO-DO-AUTOR")
+                        //         .getTextContent();
+                        // arrayListAutores.add(autor);
+                        vetAutores.add(autores.item(i).getAttributes().getNamedItem("NOME-COMPLETO-DO-AUTOR").getTextContent().trim());
+                    }
+                    Iterator<String> iterator = vetAutores.iterator();
+                    while(iterator.hasNext()){
+                        arrayListAutores.add(iterator.next());
+                    }                    
+                    ProducaoBibliografica producao = new TrabalhoEmEvento(arrayListAutores, titulo, ano);
+                    producao.setDetalhamento(detalhamento);
                     this.pesquisadorLogado.addProducao(producao);
                 }
 
             }
-
 
         } catch (ParserConfigurationException | SAXException | IOException e) {
             e.printStackTrace();
         }
     }
 
-    private void carregaArtigosPublicados(File arquivo){
+    private void carregaArtigosPublicados(File arquivo) {
         try {
             DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
             dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
@@ -333,11 +423,12 @@ public class Gerenciador {
 
                     NodeList autores = ((Element) node).getElementsByTagName("AUTORES");
                     for (int i = 0; i < autores.getLength(); i++) {
-                        String autor = autores.item(i).getAttributes().getNamedItem("NOME-COMPLETO-DO-AUTOR").getTextContent();
+                        String autor = autores.item(i).getAttributes().getNamedItem("NOME-COMPLETO-DO-AUTOR")
+                                .getTextContent();
                         arrayListAutores.add(autor);
                     }
 
-                    ProducaoBibliografica producao = new ArtigoPublicado(arrayListAutores,titulo,ano);
+                    ProducaoBibliografica producao = new ArtigoPublicado(arrayListAutores, titulo, ano);
                     this.pesquisadorLogado.addProducao(producao);
                 }
 
@@ -348,7 +439,7 @@ public class Gerenciador {
         }
     }
 
-    private void carregaLivrosPublicados(File arquivo){
+    private void carregaLivrosPublicados(File arquivo) {
         try {
             DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
             dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
@@ -378,23 +469,23 @@ public class Gerenciador {
 
                     NodeList autores = ((Element) node).getElementsByTagName("AUTORES");
                     for (int i = 0; i < autores.getLength(); i++) {
-                        String autor = autores.item(i).getAttributes().getNamedItem("NOME-COMPLETO-DO-AUTOR").getTextContent();
+                        String autor = autores.item(i).getAttributes().getNamedItem("NOME-COMPLETO-DO-AUTOR")
+                                .getTextContent();
                         arrayListAutores.add(autor);
                     }
 
-                    ProducaoBibliografica producao = new LivroPublicado(arrayListAutores,titulo,ano);
+                    ProducaoBibliografica producao = new LivroPublicado(arrayListAutores, titulo, ano);
                     this.pesquisadorLogado.addProducao(producao);
                 }
 
             }
-
 
         } catch (ParserConfigurationException | SAXException | IOException e) {
             e.printStackTrace();
         }
     }
 
-    private void carregaCapitulosPublicados(File arquivo){
+    private void carregaCapitulosPublicados(File arquivo) {
         try {
             DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 
@@ -419,17 +510,19 @@ public class Gerenciador {
                     String ano = "";
                     NodeList dadosBasicos = ((Element) node).getElementsByTagName("DADOS-BASICOS-DO-CAPITULO");
                     for (int i = 0; i < dadosBasicos.getLength(); i++) {
-                        titulo = dadosBasicos.item(i).getAttributes().getNamedItem("TITULO-DO-CAPITULO-DO-LIVRO").getTextContent();
+                        titulo = dadosBasicos.item(i).getAttributes().getNamedItem("TITULO-DO-CAPITULO-DO-LIVRO")
+                                .getTextContent();
                         ano = dadosBasicos.item(i).getAttributes().getNamedItem("ANO").getTextContent();
                     }
 
                     NodeList autores = ((Element) node).getElementsByTagName("AUTORES");
                     for (int i = 0; i < autores.getLength(); i++) {
-                        String autor = autores.item(i).getAttributes().getNamedItem("NOME-COMPLETO-DO-AUTOR").getTextContent();
+                        String autor = autores.item(i).getAttributes().getNamedItem("NOME-COMPLETO-DO-AUTOR")
+                                .getTextContent();
                         arrayListAutores.add(autor);
                     }
 
-                    ProducaoBibliografica producao = new CapituloPublicado(arrayListAutores,titulo,ano);
+                    ProducaoBibliografica producao = new CapituloPublicado(arrayListAutores, titulo, ano);
                     this.pesquisadorLogado.addProducao(producao);
                 }
 

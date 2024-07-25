@@ -9,7 +9,7 @@ public class TrabalhoEmEvento extends ProducaoBibliografica{
 
     @Override
     public String getTipo() {
-        return "Trabalho em Evento; ";
+        return "Trabalho em Evento:";
     }
 
     @Override

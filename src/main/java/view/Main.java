@@ -4,6 +4,7 @@ import servico.Gerenciador;
 
 import java.util.Scanner;
 
+//  https://github.com/ByteCodeBros/lattes-report
 public class Main {
     public static void main(String[] args){
         Gerenciador gerenciador = new Gerenciador();
@@ -30,6 +31,7 @@ public class Main {
                 case 3 -> loopMain = false;
                 default -> System.out.println("Insira um valor válido\n");
             }
+            // entrada.close();
         }
     }
 }

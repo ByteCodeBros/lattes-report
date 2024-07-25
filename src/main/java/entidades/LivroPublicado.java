@@ -9,7 +9,7 @@ public class LivroPublicado extends ProducaoBibliografica{
 
     @Override
     public String getTipo() {
-        return "Livro Publicado; ";
+        return "Livro Publicado: ";
     }
 
     @Override
